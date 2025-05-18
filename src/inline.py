@@ -1,5 +1,7 @@
 from textnode import TextNode, TextType
 
+import re
+
 """
 Convert raw markdown strings to TextNodes
 
@@ -39,3 +41,75 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             raise Exception("Unhandled case in split_nodes_delimiter")
 
     return split_nodes
+
+# split_nodes_image splits one "text" TextNode into a list of TextNode
+# if the inline text contains images
+def split_nodes_image(old_nodes):
+    # For each image extracted from the text, split the text before and after the image markdown
+    split_nodes = []
+    for node in old_nodes:
+        original_text = node.text
+        extracted_imgs = extract_markdown_images(original_text)
+        # if no images, nothing to do
+        if len(extracted_imgs) == 0:
+            split_nodes.append(node)
+        for i in range(0, len(extracted_imgs)):
+            image_alt, image_link = extracted_imgs[i]
+            # split text into before and after image
+            sections = original_text.split(f"![{image_alt}]({image_link})", 1)
+            # before the image
+            if len(sections[0]) > 0:
+                split_nodes.append(TextNode(sections[0], TextType.TEXT))
+            # image itself
+            split_nodes.append(TextNode(image_alt, TextType.IMAGE, image_link))
+            # after the image
+            if len(sections[1]) > 0:
+                original_text = sections[1]
+                if i == len(extracted_imgs) - 1:
+                    # this is the last image in the string
+                    # append the trailing bits of the string
+                    split_nodes.append(TextNode(original_text, TextType.TEXT))
+
+    return split_nodes
+
+# split_nodes_image splits one "text" TextNode into a list of TextNode
+# if the inline text contains links
+def split_nodes_link(old_nodes):
+    split_nodes = []
+    for node in old_nodes:
+        original_text = node.text
+        extracted_links = extract_markdown_links(original_text)
+        # if no links, nothing to do
+        if len(extracted_links) == 0:
+            split_nodes.append(node)
+        for i in range(0, len(extracted_links)):
+            link_text, link_url = extracted_links[i]
+            # split text into before and after link
+            sections = original_text.split(f"[{link_text}]({link_url})", 1)
+            # before the link
+            if len(sections[0]) > 0:
+                split_nodes.append(TextNode(sections[0], TextType.TEXT))
+            # link itself
+            split_nodes.append(TextNode(link_text, TextType.LINK, link_url))
+            # after the image
+            if len(sections[1]) > 0:
+                original_text = sections[1]
+                if i == len(extracted_links) - 1:
+                    # this is the last link in the string
+                    # append the trailing bits of the string
+                    split_nodes.append(TextNode(original_text, TextType.TEXT))
+    return split_nodes
+
+# extract_markdown_images extracts images from any string of markdown text
+def extract_markdown_images(text):
+    # text: raw markdown text
+    # returns list of tuples (alt text, url)
+    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    return re.findall(pattern, text)
+
+# extract_markdown_links extracts links from any string of markdown text
+def extract_markdown_links(text):
+    # text: raw markdown text
+    # returns list of tuples (anchor text, url)
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    return re.findall(pattern, text)
