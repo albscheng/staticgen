@@ -4,6 +4,23 @@ from inline import *
 from textnode import TextNode, TextType
 
 class TestInline(unittest.TestCase):
+    def test_text_to_textnodes(self):
+        str1 = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://www.github.com)"
+        expected1 = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://www.github.com"),
+        ]
+        self.assertListEqual(expected1, text_to_textnodes(str1))
+
+    
     def test_split_nodes_delimiter(self):
         node = TextNode("This is text with a `code block` word", TextType.TEXT)
         new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
@@ -60,6 +77,7 @@ class TestInline(unittest.TestCase):
         ]
         self.assertListEqual(new_nodes6, expected6)
     
+    
     def test_split_images(self):
         node = TextNode(
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
@@ -95,6 +113,7 @@ class TestInline(unittest.TestCase):
             new_nodes2
         )
 
+    
     def test_split_links(self):
         node = TextNode(
             "This is text with a [link](https://i.imgur.com/zjjcJKZ.png) and another [second link](https://i.imgur.com/3elNhQu.png)",
@@ -130,12 +149,14 @@ class TestInline(unittest.TestCase):
             new_nodes2
         )
 
+    
     def test_extract_markdown_images(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         extracted = extract_markdown_images(text)
         exp = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
         self.assertListEqual(extracted, exp)
 
+    
     def test_extract_markdown_links(self):
         text = "This is text with a link [to github](https://www.github.com) and [to youtube](https://www.youtube.com)"
         extracted = extract_markdown_links(text)

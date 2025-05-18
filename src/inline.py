@@ -15,6 +15,33 @@ Convert raw markdown strings to TextNodes
     ]
 """
 
+# text_to_textnodes converts a raw string of markdown text to TextNode objects
+def text_to_textnodes(text):
+    # text: string containing markdown-flavoured text
+    # returns list of TextNode
+    nodes = [TextNode(text, TextType.TEXT)]
+    print("Nodes init")
+    print(nodes)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    print("Nodes after BOLD")
+    print(nodes)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    print("Nodes after ITALIC")
+    print(nodes)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    print("Nodes after CODE")
+    print(nodes)
+    nodes = split_nodes_image(nodes)
+    print("Nodes after IMG")
+    print(nodes)
+    nodes = split_nodes_link(nodes)
+    print("Nodes after LINK")
+    print(nodes)
+
+    print("")
+    print(nodes)
+    return nodes
+
 # split_nodes_delimiter splits one "text" TextNode into a list of TextNode
 # if the inline text contains bold, italics, or code
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -35,8 +62,8 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             if len(sp[2]) > 0:
                 split_nodes.append(TextNode(sp[2], TextType.TEXT))
         elif len(sp) == 1:
-            # delimiter was NOT found (plain text)
-            split_nodes.append(TextNode(sp[0], TextType.TEXT))
+            # delimiter was NOT found (no-op)
+            split_nodes.append(node)
         else:
             raise Exception("Unhandled case in split_nodes_delimiter")
 
